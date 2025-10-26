@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Space Shooter (Full PNG)</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            border: 2px solid #fff;
+            width: 800px;
+            height: 600px;
+            max-width: 100vw;
+            max-height: 100vh;
+            border-radius: 30px;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            background-color: #00001a;
+            width: 100%;
+            height: 100%;
+            box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 50px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 26px -18px inset;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #pauseMenu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: all;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            pointer-events: all;
+            gap: 30px;
+            width: 70px;
+            height: 36px;
+            --input-focus: #2d8cf0;
+            --bg-color: #fff;
+            --bg-color-alt: #666;
+            --main-color: #323232;
+            --input-out-of-focus: #ccc;
+        }
+
+        .toggle {
+            opacity: 0;
+        }
+
+        .slider {
+            box-sizing: border-box;
+            border-radius: 100px;
+            border: 2px solid var(--main-color);
+            box-shadow: 4px 4px var(--main-color);
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--input-out-of-focus);
+            transition: 0.3s;
+        }
+
+        .slider:before {
+            content: "off";
+            box-sizing: border-box;
+            height: 30px;
+            width: 30px;
+            position: absolute;
+            left: 2px;
+            bottom: 1px;
+            border: 2px solid var(--main-color);
+            border-radius: 100px;
+            background-color: var(--bg-color);
+            color: var(--main-color);
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            line-height: 25px;
+            transition: 0.3s;
+        }
+
+        .toggle:checked+.slider {
+            background-color: var(--input-focus);
+        }
+
+        .toggle:checked+.slider:before {
+            content: "on";
+            transform: translateX(32px);
+        }
+
+        .card {
+            font-family: Montserrat, sans-serif;
+            width: 300px;
+            height: 250px;
+            translate: -6px -6px;
+            background: #66dbff;
+            border: 3px solid #000000;
+            box-shadow: 12px 12px 0 #000000;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border-radius: 30px;
+        }
+
+        .head {
+            font-family: Montserrat, sans-serif;
+            font-size: 14px;
+            font-weight: 900;
+            width: 100%;
+            height: 32px;
+            background: #ffffff;
+            padding: 8px 12px;
+            box-sizing: border-box;
+            color: #000000;
+            border-bottom: 3px solid #000000;
+        }
+
+        .content {
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .button {
+            padding: 5px 10px;
+            margin-top: 10px;
+            border: 3px solid #000000;
+            box-shadow: 3px 3px 0 #000000;
+            font-weight: 750;
+            background: #4ade80;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-family: Montserrat, sans-serif;
+        }
+
+        .button:hover {
+            translate: 1.5px 1.5px;
+            box-shadow: 1.5px 1.5px 0 #000000;
+            background: #1ac2ff;
+        }
+
+        .button:active {
+            translate: 3px 3px;
+            box-shadow: 0 0 0 #000000;
+        }
+
+        .card:hover {
+            translate: 0 0;
+        }
+
+        .score-card {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            pointer-events: all;
+            width: 150px;
+            font-family: Montserrat, sans-serif;
+            background: #66dbff;
+            border: 3px solid #000000;
+            box-shadow: 6px 6px 0 #000000;
+            translate: -3px -3px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            border-radius: 15px;
+        }
+
+        .score-card:hover {
+            translate: 0 0;
+        }
+
+        .score-head {
+            font-size: 14px;
+            font-weight: 900;
+            background: #ffffff;
+            padding: 4px 8px;
+            box-sizing: border-box;
+            color: #000000;
+            border-bottom: 3px solid #000000;
+        }
+
+        .score-body {
+            padding: 8px;
+            text-align: right;
+        }
+
+        #score-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <audio id="bgMusic" src="background_music.mp3" loop></audio>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div id="ui-overlay">
+
+            <div class="score-card">
+                <div class="score-head">
+                    <span>Счёт</span>
+                </div>
+                <div class="score-body">
+                    <span id="score-value">0</span>
+                </div>
+            </div>
+
+            <label class="switch">
+                <input type="checkbox" class="toggle" id="pauseToggle">
+                <span class="slider"></span>
+                <span class="card-side"></span>
+            </label>
+        </div>
+
+        <div id="pauseMenu" class="hidden">
+            <div class="card">
+                <div id="pauseTitle" class="head">Пауза</div>
+                <div class="content">
+                    <button id="restartButton" class="button">Рестарт</button>
+                    <button id="exitButton" class="button">Выход</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 600;
+
+        const scoreEl = document.getElementById('score-value');
+        const pauseToggle = document.getElementById('pauseToggle');
+        const pauseMenu = document.getElementById('pauseMenu');
+        const pauseTitle = document.getElementById('pauseTitle');
+        const restartButton = document.getElementById('restartButton');
+        const exitButton = document.getElementById('exitButton');
+        const bgMusic = document.getElementById('bgMusic');
+        bgMusic.volume = 0.05;
+
+        const playerImage = new Image();
+        playerImage.src = 'starship.png';
+        const asteroidImage1 = new Image();
+        asteroidImage1.src = 'asteroid_1.png';
+        const asteroidImage2 = new Image();
+        asteroidImage2.src = 'asteroid_2.png';
+
+        const imagesToLoad = 3;
+        let imagesLoaded = 0;
+
+        function onImageLoad() {
+            imagesLoaded++;
+            if (imagesLoaded === imagesToLoad) {
+                initStars();
+                resetGame();
+            }
+        }
+        function onImageError(e) {
+            console.error(`Не удалось загрузить ${e.target.src}`);
+            alert(`Ошибка: Файл '${e.target.src}' не найден.`);
+        }
+        playerImage.onload = onImageLoad;
+        asteroidImage1.onload = onImageLoad;
+        asteroidImage2.onload = onImageLoad;
+        playerImage.onerror = onImageError;
+        asteroidImage1.onerror = onImageError;
+        asteroidImage2.onerror = onImageError;
+
+        let score = 0;
+        let isPaused = false;
+        let gameLoopId;
+        let stars = [];
+        let obstacles = [];
+
+        const player = {
+            width: 50,
+            height: 50,
+            x: CANVAS_WIDTH / 2 - 25,
+            y: CANVAS_HEIGHT - 60,
+            speed: 8
+        };
+
+        let rightPressed = false;
+        let leftPressed = false;
+        let touchX = null;
+
+        document.addEventListener('keydown', keyDownHandler);
+        document.addEventListener('keyup', keyUpHandler);
+
+        function keyDownHandler(e) {
+            if (e.key === 'Right' || e.key === 'ArrowRight' || e.key === 'd') {
+                rightPressed = true;
+            } else if (e.key === 'Left' || e.key === 'ArrowLeft' || e.key === 'a') {
+                leftPressed = true;
+            }
+        }
+        function keyUpHandler(e) {
+            if (e.key === 'Right' || e.key === 'ArrowRight' || e.key === 'd') {
+                rightPressed = false;
+            } else if (e.key === 'Left' || e.key === 'ArrowLeft' || e.key === 'a') {
+                leftPressed = false;
+            }
+        }
+
+        canvas.addEventListener('touchstart', handleTouch, { passive: false });
+        canvas.addEventListener('touchmove', handleTouch, { passive: false });
+        canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+        canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+        function handleTouch(e) {
+            e.preventDefault();
+            if (isPaused) return;
+            const rect = canvas.getBoundingClientRect();
+            touchX = e.touches[0].clientX - rect.left;
+        }
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            touchX = null;
+            leftPressed = false;
+            rightPressed = false;
+        }
+
+        function drawPlayer() {
+            ctx.drawImage(playerImage, player.x, player.y, player.width, player.height);
+        }
+
+        const starSymbols = ['*', '·', '+', '.'];
+
+        function initStars() {
+            for (let i = 0; i < 150; i++) {
+                stars.push({
+                    x: Math.random() * CANVAS_WIDTH,
+                    y: Math.random() * CANVAS_HEIGHT,
+                    size: Math.random() * 10 + 5,
+                    symbol: starSymbols[Math.floor(Math.random() * starSymbols.length)],
+                    speed: Math.random() * 0.7 + 0.3
+                });
+            }
+        }
+
+        function drawBackground() {
+            ctx.fillStyle = '#00001a';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            ctx.fillStyle = '#FFFFFF';
+
+            for (let star of stars) {
+                ctx.font = `${star.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(star.symbol, star.x, star.y);
+                star.y += star.speed;
+
+                if (star.y > CANVAS_HEIGHT) {
+                    star.y = 0;
+                    star.x = Math.random() * CANVAS_WIDTH;
+                    star.size = Math.random() * 10 + 5;
+                    star.symbol = starSymbols[Math.floor(Math.random() * starSymbols.length)];
+                    star.speed = Math.random() * 0.7 + 0.3;
+                }
+            }
+        }
+
+        class Obstacle {
+            constructor() {
+                this.width = Math.random() * 20 + 30;
+                this.height = this.width;
+                this.x = Math.random() * (CANVAS_WIDTH - this.width);
+                this.y = -this.height;
+                this.speed = Math.random() * 3 + 2;
+                this.isEnemy = Math.random() > 0.4;
+                this.image = this.isEnemy ? asteroidImage1 : asteroidImage2;
+            }
+            update() { this.y += this.speed; }
+            draw() { ctx.drawImage(this.image, this.x, this.y, this.width, this.height); }
+        }
+
+        function handleObstacles() {
+            if (Math.random() < 0.025) {
+                obstacles.push(new Obstacle());
+            }
+
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].update();
+                obstacles[i].draw();
+
+                if (obstacles[i].y > CANVAS_HEIGHT) {
+                    obstacles.splice(i, 1);
+                    score++;
+                    updateScoreUI();
+                }
+            }
+        }
+
+        function updateScoreUI() {
+            scoreEl.textContent = score;
+        }
+
+        function movePlayer() {
+            if (touchX !== null) {
+                const center = player.x + player.width / 2;
+                if (touchX > center + 10) { player.x += player.speed; }
+                else if (touchX < center - 10) { player.x -= player.speed; }
+            } else {
+                if (leftPressed && player.x > 0) player.x -= player.speed;
+                if (rightPressed && player.x < CANVAS_WIDTH - player.width) player.x += player.speed;
+            }
+            if (player.x < 0) player.x = 0;
+            if (player.x > CANVAS_WIDTH - player.width) player.x = CANVAS_WIDTH - player.width;
+        }
+
+        function checkCollisions() {
+            const playerRect = {
+                x: player.x + player.width * 0.1,
+                y: player.y + player.height * 0.1,
+                width: player.width * 0.8,
+                height: player.height * 0.8
+            };
+            for (let obs of obstacles) {
+                const obsRect = {
+                    x: obs.x + obs.width * 0.1,
+                    y: obs.y + obs.height * 0.1,
+                    width: obs.width * 0.8,
+                    height: obs.height * 0.8
+                };
+                if (
+                    playerRect.x < obsRect.x + obsRect.width &&
+                    playerRect.x + playerRect.width > obsRect.x &&
+                    playerRect.y < obsRect.y + obsRect.height &&
+                    playerRect.y + playerRect.height > obsRect.y
+                ) {
+                    gameOver();
+                }
+            }
+        }
+
+        function togglePause() {
+            isPaused = pauseToggle.checked;
+            if (isPaused) {
+                cancelAnimationFrame(gameLoopId);
+                pauseMenu.classList.remove('hidden');
+                pauseTitle.textContent = "Пауза";
+                bgMusic.pause();
+            } else {
+                pauseMenu.classList.add('hidden');
+                gameLoopId = requestAnimationFrame(gameLoop);
+                bgMusic.play();
+            }
+        }
+
+        function gameOver() {
+            isPaused = true;
+            pauseToggle.checked = true;
+            cancelAnimationFrame(gameLoopId);
+            pauseMenu.classList.remove('hidden');
+            pauseTitle.textContent = "Игра Окончена!";
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
+        }
+
+        function resetGame() {
+            score = 0;
+            player.x = CANVAS_WIDTH / 2 - player.width / 2;
+            obstacles = [];
+            updateScoreUI();
+            if (isPaused) {
+                isPaused = false;
+                pauseMenu.classList.add('hidden');
+                pauseToggle.checked = false;
+            }
+            if (gameLoopId) {
+                cancelAnimationFrame(gameLoopId);
+            }
+            bgMusic.play().catch(e => console.log("Музыка заблокирована браузером до первого клика."));
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function exitGame() {
+            isPaused = true;
+            cancelAnimationFrame(gameLoopId);
+            ctx.fillStyle = '#00001a';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '30px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Спасибо за игру!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+            pauseMenu.classList.add('hidden');
+            document.getElementById('ui-overlay').classList.add('hidden');
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
+        }
+
+        pauseToggle.addEventListener('change', togglePause);
+        restartButton.addEventListener('click', resetGame);
+        exitButton.addEventListener('click', exitGame);
+
+        function gameLoop() {
+            if (isPaused) return;
+            drawBackground();
+            drawPlayer();
+            movePlayer();
+            handleObstacles();
+            checkCollisions();
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+
+</html>
